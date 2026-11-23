@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hours Don't Lie? What Playtime Reveals About Steam Recommendations</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <p class="kicker">DSC 209R Final Project · Initial Prototype · Hyungwoo Kwon</p>
+  <h1>Hours Don't Lie?</h1>
+  <p class="dek">What playtime reveals about Steam recommendations</p>
+</header>
+
+<main>
+<section id="hook">
+  <p class="lead">Every game on Steam shows one number: the share of reviewers who recommend it. In our sample of 1,000,000 reviews, that number is 85.9%. But that single number mixes people who quit after 40 minutes with people who stayed for 400 hours, and the two groups often disagree. How much does the verdict depend on how long the reviewer played, and what does that mean for the number you see?</p>
+</section>
+
+<section id="s1">
+  <h2>1. Most reviews come after hours of play, but not all</h2>
+  <p>Each bar counts reviews by how long the reviewer had played. The x-axis is logarithmic. Hover a bar to see its count.</p>
+  <div id="hist" class="chart"></div>
+</section>
+
+<section id="s2">
+  <h2>2. Recommendation rises with playtime, then levels off</h2>
+  <p>Recommendation rate for every playtime group. The dashed line is the single rate Steam would show. Hover a bar for the exact rate and review count; click a bar to use that range in the ranking below.</p>
+  <div id="rate" class="chart"></div>
+</section>
+
+<section id="s3">
+  <h2>3. Re-rank games by who is reviewing</h2>
+  <p>Pick a playtime window. Games with enough reviews in that window are re-ranked by their recommendation rate, and the bars slide into their new order. The black tick on each bar is the game's all-hours rate, so you can see who gains and who loses when only short or long sessions count.</p>
+  <div id="controls">
+    <div class="ctl">
+      <label>Playtime from <b id="lo-label"></b> to <b id="hi-label"></b></label>
+      <div class="dual">
+        <input type="range" id="lo" min="0" max="9" step="1" value="0">
+        <input type="range" id="hi" min="1" max="10" step="1" value="2">
+      </div>
+      <div class="presets">
+        <button data-lo="0" data-hi="2">First 2 hours</button>
+        <button data-lo="0" data-hi="3">Under 5 h</button>
+        <button data-lo="6" data-hi="10">50 h and more</button>
+        <button data-lo="0" data-hi="10">All hours</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label>Minimum reviews in window: <b id="minn-label"></b></label>
+      <input type="range" id="minn" min="20" max="300" step="10" value="50">
+    </div>
+    <div class="ctl">
+      <label>Show
+        <select id="order">
+          <option value="top">highest rated</option>
+          <option value="bottom">lowest rated</option>
+          <option value="gain">biggest gain vs all hours</option>
+          <option value="loss">biggest drop vs all hours</option>
+        </select>
+      </label>
+      <label>Find a game <input type="text" id="find" list="titles" placeholder="e.g. Cyberpunk 2077"></label>
+      <datalist id="titles"></datalist>
+    </div>
+  </div>
+  <p id="rank-status" class="status"></p>
+  <div id="rank" class="chart"></div>
+</section>
+
+<section id="writeup">
+  <h2>Prototype write-up</h2>
+  <h3>What I have done so far</h3>
+  <p>The goal is not to argue that long-play reviews should count more, but to show that the single rate hides how much the verdict depends on the reviewer's playtime. I sampled Steam users at random (seed 209) from the public Kaggle dataset "Game Recommendations on Steam" by Anton Kozyriev and kept all of their reviews, which gives 1,000,000 reviews from 336,675 users on 22,146 games. I wrote a Python preprocessing script that groups every review into ten playtime bins and stores, for each game with at least 150 sampled reviews, the number of reviews and recommendations in each bin, so the page loads a single small JSON file instead of the raw 2 GB CSV. The page opens with a hook that questions the single recommendation rate Steam shows for each game, followed by a log-scale histogram of reviewer playtime and a bar chart of the recommendation rate for each playtime group against the overall rate. The main interactive view re-ranks games by their recommendation rate within a playtime window chosen with a two-handle slider, with a minimum-review threshold, sort options, a game search box, and animated bar transitions. The views are linked, so clicking a bar in the recommendation-rate chart sets the ranking window to that playtime group, and every chart has hover tooltips with exact counts and rates.</p>
+  <h3>The most challenging part</h3>
+  <p>The hardest design problem is small samples: when the playtime window is narrow, many games have only a handful of reviews, and a game with 3 out of 3 positive reviews would look better than one with 950 out of 1,000. Right now I handle this with a minimum-review slider, but I still need to decide whether to show uncertainty directly. One option is to rank games by a lower confidence bound instead of the raw rate. Another is to draw confidence intervals so readers can see which differences are reliable.</p>
+  <h3>Next step</h3>
+  <ul>
+    <li>The current playtime bins are too coarse. I will switch to the finest playtime unit in the data so the ranking updates immediately for any playtime window the reader chooses.</li>
+    <li>Sorting by highest rated puts almost every game at 100%, which says nothing meaningful, so I need to rethink that view.</li>
+    <li>I will group games into categories such as genre or type to show how review patterns differ across kinds of games.</li>
+  </ul>
+  <p class="note">Data: Kaggle, "Game Recommendations on Steam" (Anton Kozyriev), recommendations.csv and games.csv; random user sample of 1,000,000 reviews (2010-10-20 to 2022-12-31). Hours are capped at 999.9 in the source data. Built with D3.js v7.</p>
+</section>
+</main>
+<div id="tooltip" class="hidden"></div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="main.js"></script>
+</body>
+</html>
